@@ -1,0 +1,16 @@
+{
+    "name": "SetDynamicFieldDashboard",
+    "version": "4.0.1",
+    "framework": [
+        "4.0.x"
+    ],
+    "vendor": {
+        "name":  "Perl-Services.de",
+        "url": "http://www.perl-services.de"
+    },
+    "license": "GNU AFFERO GENERAL PUBLIC LICENSE Version 3, November 2007",
+    "description" : {
+        "en": "Set the value of a dynamic field in the dashboard",
+        "de": "Ermöglicht das Setzen eines Dynamischen Feldes im Dashboard"
+    }
+}

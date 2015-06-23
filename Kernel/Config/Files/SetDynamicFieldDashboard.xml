@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<otrs_config version="1.0" init="Application">
+    <ConfigItem Name="SetDynamicFieldDashboard::DynamicField" Required="0" Valid="1">
+        <Description Translatable="1">Defines which dynamic field can be set in dashboard.</Description>
+        <Group>SetDynamcFieldDashboard</Group>
+        <SubGroup>Core</SubGroup>
+        <Setting>
+            <String Regex="">Project</String>
+        </Setting>
+    </ConfigItem>
+</otrs_config>
+
