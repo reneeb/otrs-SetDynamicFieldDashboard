@@ -313,6 +313,12 @@ sub Preferences {
             keys %{ $Self->{Config}->{DefaultColumns} };
     }
 
+# ---
+# PS
+# ---
+    push @ColumnsAvailable, 'EditableDynamicField';
+# ---
+
     # check if the user has filter preferences for this widget
     my %Preferences = $Kernel::OM->Get('Kernel::System::User')->GetPreferences(
         UserID => $Self->{UserID},
@@ -362,6 +368,13 @@ sub Preferences {
                 15 => '15',
                 20 => '20',
                 25 => '25',
+# ---
+# PS
+# ---
+                50  => '50',
+                100 => '100',
+                200 => '200',
+# ---
             },
             SelectedID  => $Self->{PageShown},
             Translation => 0,
@@ -497,6 +510,14 @@ sub Run {
 
     my %SearchParams        = $Self->_SearchParamsGet(%Param);
     my @Columns             = @{ $SearchParams{Columns} };
+
+# ---
+# PS
+# ---
+    my $ShowDynamicField = grep{ $_ eq 'EditableDynamicField' }@Columns;
+    @Columns             = grep{ $_ ne 'EditableDynamicField' }@Columns;
+# ---
+
     my %TicketSearch        = %{ $SearchParams{TicketSearch} };
     my %TicketSearchSummary = %{ $SearchParams{TicketSearchSummary} };
 
@@ -1262,6 +1283,16 @@ sub Run {
         }
     }
 
+# ---
+# PS
+# ---
+    if ( $ShowDynamicField ) {
+        $LayoutObject->Block(
+            Name => 'PSShowDynamicField',
+        );
+    }
+# ---
+
     # show tickets
     my $Count = 0;
     TICKETID:
@@ -1592,7 +1623,7 @@ sub Run {
         my $DynamicFieldName = $ConfigObject->Get('SetDynamicFieldDashboard::DynamicField');
         my $ParamObject      = $Kernel::OM->Get('Kernel::System::Web::Request');
 
-        if ( $DynamicFieldName ) {
+        if ( $DynamicFieldName && $ShowDynamicField ) {
 
             if ( !$Self->{DynamicField} || !@{ $Self->{DynamicField} } ) {
                 $Self->{DynamicField} = $Kernel::OM->Get('Kernel::System::DynamicField')->DynamicFieldListGet(
@@ -1626,10 +1657,18 @@ sub Run {
                     LayoutObject       => $LayoutObject,
                     ParamObject        => $ParamObject,
                 );
-    
+
+                $DynamicFieldField->{Field} =~ s{
+                    id="[^"]+\K
+                }{_Ticket_$TicketID}xms;
+
                 $LayoutObject->Block(
                     Name => 'PSEditableDynamicField',
-                    Data => { Field => $DynamicFieldField->{Field} },
+                    Data => {
+                        Field    => $DynamicFieldField->{Field},
+                        Name     => $DynamicFieldName,
+                        TicketID => $TicketID,
+                    },
                 );
             }
         }
@@ -1683,6 +1722,13 @@ sub Run {
         );
     }
 
+# ---
+# PS
+# ---
+
+    my $DynamicFieldName = $ConfigObject->Get('SetDynamicFieldDashboard::DynamicField');
+# ---
+
     my $Content = $LayoutObject->Output(
         TemplateFile => 'AgentDashboardTicketGenericDynamicField',
         Data         => {
@@ -1691,6 +1737,12 @@ sub Run {
             %{$Summary},
             FilterValue => $Self->{Filter},
             CustomerID  => $Self->{CustomerID},
+# ---
+# PS
+# ---
+
+            DynamicFieldField => $DynamicFieldName,
+# ---
         },
         KeepScriptTags => $Param{AJAX},
     );

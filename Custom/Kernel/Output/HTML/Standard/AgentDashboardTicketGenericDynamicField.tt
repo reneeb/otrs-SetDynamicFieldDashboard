@@ -370,9 +370,15 @@ Core.Agent.Dashboard.InitCustomerUserAutocomplete( $(".CustomerUserAutoComplete"
 [% RenderBlockEnd("ContentLargeTicketGenericHeaderTicketHeader") %]
 
 [% RenderBlockEnd("GeneralOverviewHeader") %]
+# ---
+# PS
+# ---
+[% RenderBlockStart("PSShowDynamicField") %]
                 <th class="DashboardHeader">
                     <span class="Gray" title="[% Translate('DynamicField') %]">[% Translate('DynamicField') %]</span>
                 </th>
+[% RenderBlockEnd("PSShowDynamicField") %]
+# ---
 
             </tr>
 
@@ -471,7 +477,12 @@ $('.DashboardHeader').off('click').on('click', '.ColumnSettingsTrigger', functio
 
         <tbody>
 [% RenderBlockStart("ContentLargeTicketGenericRow") %]
-            <tr class="MasterAction">
+# ---
+# PS
+# ---
+#            <tr class="MasterAction">
+            <tr class="MasterActionSetDynamicFieldDashboard">
+# ---
 
 [% RenderBlockStart("GeneralOverviewRow") %]
 
@@ -550,11 +561,19 @@ $('.DashboardHeader').off('click').on('click', '.ColumnSettingsTrigger', functio
 
 [% RenderBlockEnd("GeneralOverviewRow") %]
 
-                 <td>
+# ---
+# PS
+# ---
 [% RenderBlockStart("PSEditableDynamicField") %]
+                 <td class="DynamicFieldLink">
                      [% Data.Field %]
-[% RenderBlockEnd("PSEditableDynamicField") %]
+                     <button class="Primary CallForAction"
+                         value="[% Translate("Save") | html %]"
+                         onclick="Core.AJAX.FunctionCall( Core.Config.Get('Baselink'), { Action: 'AgentDynamicFieldDashboardSet', Field: '[% Data.Name | html %]', TicketID: '[% Data.TicketID | html %]', Value: $('#DynamicField_[% Data.Name %]_Ticket_[% Data.TicketID %]').val() }, function(Response) { if ( Response.Success ) { alert('[% Translate("saved") %]'); } else { alert('[% Translate("error") %]'); } } ); return false;"
+                     >[% Translate("Save") | html %]</button>
                  </td>
+[% RenderBlockEnd("PSEditableDynamicField") %]
+# ---
             </tr>
 [% RenderBlockEnd("ContentLargeTicketGenericRow") %]
 [% RenderBlockStart("ContentLargeTicketGenericNone") %]
@@ -643,18 +662,42 @@ $('#Dashboard[% Data.Name | html %]-box').find('.RemoveFilters').remove();
 
 [% WRAPPER JSOnDocumentComplete %]
 <script type="text/javascript">//<![CDATA[
-    $('.MasterAction').bind('click', function (Event) {
+# ---
+# PS
+# ---
+#    $('.MasterAction').bind('click', function (Event) {
+#        var $MasterActionLink = $(this).find('.MasterActionLink');
+#        // prevent MasterAction on Dynamic Fields links
+#        if ($(Event.target).hasClass('DynamicFieldLink')) {
+#            return true;
+#        }
+#        // only act if the link was not clicked directly
+#        if (Event.target !== $MasterActionLink.get(0)) {
+#            window.location = $MasterActionLink.attr('href');
+#            return false;
+#        }
+#    });
+    $('.MasterActionSetDynamicFieldDashboard').each( function() {
         var $MasterActionLink = $(this).find('.MasterActionLink');
-        // prevent MasterAction on Dynamic Fields links
-        if ($(Event.target).hasClass('DynamicFieldLink')) {
-            return true;
-        }
-        // only act if the link was not clicked directly
-        if (Event.target !== $MasterActionLink.get(0)) {
-            window.location = $MasterActionLink.attr('href');
-            return false;
-        }
+
+        $(this).find( 'td' ).each( function() {
+            if ($(this).hasClass('DynamicFieldLink')) {
+                return true;
+            }
+#            else if ($(this)[0].outerHTML == $MasterActionLink.get(0) ) {
+#                return true;
+#            }
+
+            $(this).unbind('click');
+
+            // only act if the link was not clicked directly
+            $(this).bind('click', function() {
+                window.location = $MasterActionLink.attr('href');
+                return false;
+            });
+        });
     });
+# ---
 
     $('#Dashboard[% Data.Name | html %]-box').find('.Tab.Actions li a').unbind('click').bind('click', function() {
         var Filter = $(this).attr('data-filter'),

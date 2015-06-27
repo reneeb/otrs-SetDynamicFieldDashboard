@@ -8,5 +8,18 @@
             <String Regex="">Project</String>
         </Setting>
     </ConfigItem>
+    <ConfigItem Name="Frontend::Module###AgentDynamicFieldDashboardSet" Required="0" Valid="1">
+        <Description Lang="en">Frontend module registration to save dynmaic field changes.</Description>
+        <Description Lang="de">Frontendmodul-Registration für das Modul zum Speichern der Aenderungen an Dynamischen Feldern.</Description>
+        <Group>SetDynamcFieldDashboard</Group>
+        <SubGroup>Frontend::Agent::ModuleRegistration</SubGroup>
+        <Setting>
+            <FrontendModuleReg>
+                <Description></Description>
+                <NavBarName>Ticket</NavBarName>
+                <Title></Title>
+            </FrontendModuleReg>
+        </Setting>
+    </ConfigItem>
 </otrs_config>
 
