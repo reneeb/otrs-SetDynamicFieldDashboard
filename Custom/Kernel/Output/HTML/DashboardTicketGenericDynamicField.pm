@@ -1663,9 +1663,18 @@ sub Run {
                     ParamObject        => $ParamObject,
                 );
 
+                my $Class = "";
+                if ( !$Value ) {
+                    $Class = "Hidden";
+                }
+
                 $DynamicFieldField->{Field} =~ s{
                     id="[^"]+\K
                 }{_Ticket_$TicketID}xms;
+
+                $DynamicFieldField->{Field} =~ s{
+                    <select \K
+                }{ autocomplete="off"}xms;
 
                 $LayoutObject->Block(
                     Name => 'PSEditableDynamicField',
@@ -1673,6 +1682,7 @@ sub Run {
                         Field    => $DynamicFieldField->{Field},
                         Name     => $DynamicFieldName,
                         TicketID => $TicketID,
+                        Class    => $Class,
                     },
                 );
             }
@@ -2192,6 +2202,9 @@ sub _SearchParamsGet {
     }
 
     my %TicketSearchSummary = (
+        MyTickets => {
+            OwnerIDs => [ $Self->{UserID}, ],
+        },
         Locked => {
             OwnerIDs => [ $Self->{UserID}, ],
             LockIDs  => [ '2', '3' ],           # 'lock' and 'tmp_lock'

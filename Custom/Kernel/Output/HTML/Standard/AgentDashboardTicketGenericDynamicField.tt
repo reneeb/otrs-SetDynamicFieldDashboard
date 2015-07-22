@@ -10,6 +10,11 @@
 [% RenderBlockStart("ContentLargeTicketGenericFilter") %]
 <ul class="Tab Actions">
     <li class="[% Data.item("Locked::Selected") | html %]"><a href="#" id="Dashboard[% Data.Name | html %]Locked" data-filter="Locked">[% Translate("My locked tickets") | html %] ([% Data.Locked | html %])</a></li>
+# ---
+# PS
+# ---
+    <li class="[% Data.item("MyTickets::Selected") | html %]"><a href="#" id="Dashboard[% Data.Name | html %]MyTickets" data-filter="MyTickets">[% Translate("My tickets") | html %] ([% Data.MyTickets | html %])</a></li>
+# ---
 [% RenderBlockStart("ContentLargeTicketGenericFilterWatcher") %]
     <li class="[% Data.item("Watcher::Selected") | html %]"><a href="#" id="Dashboard[% Data.Name | html %]Watcher" data-filter="Watcher">[% Translate("My watched tickets") | html %] ([% Data.Watcher | html %])</a></li>
 [% RenderBlockEnd("ContentLargeTicketGenericFilterWatcher") %]
@@ -568,8 +573,8 @@ $('.DashboardHeader').off('click').on('click', '.ColumnSettingsTrigger', functio
                  <td class="DynamicFieldLink">
                      [% Data.Field %]
                      <button class="Primary CallForAction"
-                         value="[% Translate("Save") | html %]"
-                         onclick="Core.AJAX.FunctionCall( Core.Config.Get('Baselink'), { Action: 'AgentDynamicFieldDashboardSet', Field: '[% Data.Name | html %]', TicketID: '[% Data.TicketID | html %]', Value: $('#DynamicField_[% Data.Name %]_Ticket_[% Data.TicketID %]').val() }, function(Response) { if ( Response.Success ) { alert('[% Translate("saved") %]'); } else { alert('[% Translate("error") %]'); } } ); return false;"
+                         value="[% Translate("Save") | html %]" id="button_text_[% Data.TicketID | html %]"
+                         onclick="Core.AJAX.FunctionCall( Core.Config.Get('Baselink'), { Action: 'AgentDynamicFieldDashboardSet', Field: '[% Data.Name | html %]', TicketID: '[% Data.TicketID | html %]', Value: $('#DynamicField_[% Data.Name %]_Ticket_[% Data.TicketID %]').val() }, function(Response) { if ( Response.Success ) { $('#button_text_[% Data.TicketID | html %]' ).html('[% Translate("Saved" ) | html %]').css('color', 'green'); window.setTimeout( function() { $('#button_text_[% Data.TicketID | html %]' ).html('[% Translate("Save") | html %]').css('color', 'black'); }, 2000 ); } else { alert('[% Translate("error") %]'); } } ); return false;"
                      >[% Translate("Save") | html %]</button>
                  </td>
 [% RenderBlockEnd("PSEditableDynamicField") %]
@@ -588,7 +593,6 @@ $('.AutoColspan').each(function() {
     var ColspanCount = $(this).closest('table').find('th').length;
     $(this).attr('colspan', ColspanCount);
 });
-//]]></script>
 [% END %]
 
 [% RenderBlockEnd("ContentLargeTicketGenericNone") %]
@@ -632,6 +636,7 @@ if (Core.Config.Get('RefreshSeconds_[% Data.NameHTML | html %]')) {
 [% WRAPPER JSOnDocumentComplete %]
 <script type="text/javascript">//<![CDATA[
 if (!$('#Dashboard[% Data.Name | html %]-box').find('.ActionMenu').find('.RemoveFilters').length) {
+var test = "asldfjasldfj";
     $('#Dashboard[% Data.Name | html %]-box')
         .find('.ActionMenu')
         .prepend('<div class="WidgetAction RemoveFilters"><a href="#" id="Dashboard[% Data.Name | html %]-remove-filters" title="[% Translate("Remove active filters for this widget.") | html %]"><i class="fa fa-trash-o"></i></a></div>')
