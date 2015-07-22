@@ -2,7 +2,7 @@
 <otrs_package version="1.0">
     <!-- GENERATED WITH OTRS::OPM::Maker::Command::sopm (1.29) -->
     <Name>SetDynamicFieldDashboard</Name>
-    <Version>4.0.1</Version>
+    <Version>4.0.2</Version>
     <Framework>4.0.x</Framework>
     <Vendor>Perl-Services.de</Vendor>
     <URL>http://www.perl-services.de</URL>
@@ -14,6 +14,7 @@
         <File Permission="644" Location="Custom/Kernel/Output/HTML/DashboardTicketGenericDynamicField.pm" />
         <File Permission="644" Location="Custom/Kernel/Output/HTML/Standard/AgentDashboardTicketGenericDynamicField.tt" />
         <File Permission="644" Location="Kernel/Config/Files/SetDynamicFieldDashboard.xml" />
+        <File Permission="644" Location="Kernel/Language/de_SetDynamicFieldDashboard.pm" />
         <File Permission="644" Location="doc/SetDynamicFieldDashboard.json" />
     </Filelist>
 </otrs_package>
