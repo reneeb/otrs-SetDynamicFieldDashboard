@@ -8,6 +8,14 @@
             <String Regex="">Project</String>
         </Setting>
     </ConfigItem>
+    <ConfigItem Name="SetDynamicFieldDashboard::CSS" Required="0" Valid="0">
+        <Description Translatable="1">CSS added in the style attribute</Description>
+        <Group>SetDynamcFieldDashboard</Group>
+        <SubGroup>Core</SubGroup>
+        <Setting>
+            <String Regex="">width: 180px</String>
+        </Setting>
+    </ConfigItem>
     <ConfigItem Name="Frontend::Module###AgentDynamicFieldDashboardSet" Required="0" Valid="1">
         <Description Lang="en">Frontend module registration to save dynmaic field changes.</Description>
         <Description Lang="de">Frontendmodul-Registration für das Modul zum Speichern der Aenderungen an Dynamischen Feldern.</Description>

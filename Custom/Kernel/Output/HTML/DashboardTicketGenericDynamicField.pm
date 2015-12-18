@@ -1627,6 +1627,8 @@ sub Run {
 
         my $DynamicFieldName = $ConfigObject->Get('SetDynamicFieldDashboard::DynamicField');
         my $ParamObject      = $Kernel::OM->Get('Kernel::System::Web::Request');
+        my $CSS              = $ConfigObject->Get('SetDynamicFieldDashboard::CSS');
+        my $Style            = $CSS ? qq~style="$CSS" ~ : '';
 
         if ( $DynamicFieldName && $ShowDynamicField ) {
 
@@ -1674,7 +1676,7 @@ sub Run {
 
                 $DynamicFieldField->{Field} =~ s{
                     <select \K
-                }{ autocomplete="off"}xms;
+                }{ autocomplete="off" $Style}xms;
 
                 $LayoutObject->Block(
                     Name => 'PSEditableDynamicField',
