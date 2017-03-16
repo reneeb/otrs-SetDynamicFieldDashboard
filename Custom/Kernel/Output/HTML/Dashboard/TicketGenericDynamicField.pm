@@ -1,18 +1,18 @@
 # --
-# Kernel/Output/HTML/DashboardTicketGenericDynamicField.pm
-# Copyright (C) 2015 Perl-Services.de, http://perl-services.de
+# Copyright (C) 2015-2017 Perl-Services.de, http://perl-services.de
 # --
 # This software comes with ABSOLUTELY NO WARRANTY. For details, see
 # the enclosed file COPYING for license information (AGPL). If you
 # did not receive this file, see http://www.gnu.org/licenses/agpl.txt.
 # --
 
-package Kernel::Output::HTML::DashboardTicketGenericDynamicField;
+package Kernel::Output::HTML::Dashboard::TicketGenericDynamicField;
 
 use strict;
 use warnings;
 
 use Kernel::System::VariableCheck qw(:all);
+use Kernel::Language qw(Translatable);
 
 our $ObjectManagerDisabled = 1;
 
@@ -24,8 +24,8 @@ sub new {
     bless( $Self, $Type );
 
     # get needed parameters
-    for my $Item (qw(Config Name UserID)) {
-        die "Got no $Item!" if ( !$Self->{$Item} );
+    for my $Needed (qw(Config Name UserID)) {
+        die "Got no $Needed!" if ( !$Self->{$Needed} );
     }
 
     # get param object
@@ -235,11 +235,12 @@ sub new {
     };
 
     # hash with all valid sortable columns (taken from TicketSearch)
-    # SortBy  => 'Age',   # Owner|Responsible|CustomerID|State|TicketNumber|Queue
+    # SortBy  => 'Age',   # Created|Owner|Responsible|CustomerID|State|TicketNumber|Queue
     # |Priority|Type|Lock|Title|Service|SLA|Changed|PendingTime|EscalationTime
     # | EscalationUpdateTime|EscalationResponseTime|EscalationSolutionTime
     $Self->{ValidSortableColumns} = {
         'Age'                    => 1,
+        'Created'                => 1,
         'Owner'                  => 1,
         'Responsible'            => 1,
         'CustomerID'             => 1,
@@ -310,7 +311,7 @@ sub Preferences {
         @ColumnsAvailable = grep { $Self->{Config}->{DefaultColumns}->{$_} }
             keys %{ $Self->{Config}->{DefaultColumns} };
         @ColumnsEnabled = grep { $Self->{Config}->{DefaultColumns}->{$_} eq '2' }
-            keys %{ $Self->{Config}->{DefaultColumns} };
+            sort { $Self->_DefaultColumnSort() } keys %{ $Self->{Config}->{DefaultColumns} };
     }
 
 # ---
@@ -340,6 +341,20 @@ sub Preferences {
         if ( $ColumnsEnabled->{Order} && @{ $ColumnsEnabled->{Order} } ) {
             @ColumnsEnabled = @{ $ColumnsEnabled->{Order} };
         }
+
+        # remove duplicate columns
+        my %UniqueColumns;
+        my @ColumnsEnabledAux;
+
+        for my $Column (@ColumnsEnabled) {
+            if ( !$UniqueColumns{$Column} ) {
+                push @ColumnsEnabledAux, $Column;
+            }
+            $UniqueColumns{$Column} = 1;
+        }
+
+        # set filtered column list
+        @ColumnsEnabled = @ColumnsEnabledAux;
     }
 
     my %Columns;
@@ -359,7 +374,7 @@ sub Preferences {
 
     my @Params = (
         {
-            Desc  => 'Shown Tickets',
+            Desc  => Translatable('Shown Tickets'),
             Name  => $Self->{PrefKeyShown},
             Block => 'Option',
             Data  => {
@@ -385,7 +400,7 @@ sub Preferences {
             Translation => 0,
         },
         {
-            Desc             => 'Shown Columns',
+            Desc             => Translatable('Shown Columns'),
             Name             => $Self->{PrefKeyColumns},
             Block            => 'AllocationList',
             Columns          => $JSONObject->Encode( Data => \%Columns ),
@@ -702,8 +717,8 @@ sub Run {
     # get config object
     my $ConfigObject = $Kernel::OM->Get('Kernel::Config');
 
-    # show also watcher if feature is enabled
-    if ( $ConfigObject->Get('Ticket::Watcher') ) {
+    # show also watcher if feature is enabled and there is a watcher filter
+    if ( $ConfigObject->Get('Ticket::Watcher') && $TicketSearchSummary{Watcher} ) {
         $LayoutObject->Block(
             Name => 'ContentLargeTicketGenericFilterWatcher',
             Data => {
@@ -715,8 +730,8 @@ sub Run {
         );
     }
 
-    # show also responsible if feature is enabled
-    if ( $ConfigObject->Get('Ticket::Responsible') ) {
+    # show also responsible if feature is enabled and there is a responsible filter
+    if ( $ConfigObject->Get('Ticket::Responsible') && $TicketSearchSummary{Responsible} ) {
         $LayoutObject->Block(
             Name => 'ContentLargeTicketGenericFilterResponsible',
             Data => {
@@ -728,7 +743,7 @@ sub Run {
         );
     }
 
-    # show only myqueues if we have the filter
+    # show only my queues if we have the filter
     if ( $TicketSearchSummary{MyQueues} ) {
         $LayoutObject->Block(
             Name => 'ContentLargeTicketGenericFilterMyQueues',
@@ -741,10 +756,23 @@ sub Run {
         );
     }
 
-    # show only myservices if we have the filter
+    # show only my services if we have the filter
     if ( $TicketSearchSummary{MyServices} ) {
         $LayoutObject->Block(
             Name => 'ContentLargeTicketGenericFilterMyServices',
+            Data => {
+                %Param,
+                %{ $Self->{Config} },
+                Name => $Self->{Name},
+                %{$Summary},
+            },
+        );
+    }
+
+    # show only locked if we have the filter
+    if ( $TicketSearchSummary{Locked} ) {
+        $LayoutObject->Block(
+            Name => 'ContentLargeTicketGenericFilterLocked',
             Data => {
                 %Param,
                 %{ $Self->{Config} },
@@ -817,15 +845,15 @@ sub Run {
         if ( $Self->{SortBy} && ( $Self->{SortBy} eq $Item ) ) {
             if ( $Self->{OrderBy} && ( $Self->{OrderBy} eq 'Up' ) ) {
                 $OrderBy = 'Down';
-                $CSS .= ' SortDescendingLarge';
+                $CSS .= ' SortAscendingLarge';
             }
             else {
                 $OrderBy = 'Up';
-                $CSS .= ' SortAscendingLarge';
+                $CSS .= ' SortDescendingLarge';
             }
 
             # set title description
-            my $TitleDesc = $OrderBy eq 'Down' ? 'sorted descending' : 'sorted ascending';
+            my $TitleDesc = $OrderBy eq 'Down' ? Translatable('sorted ascending') : Translatable('sorted descending');
             $TitleDesc = $LayoutObject->{LanguageObject}->Translate($TitleDesc);
             $Title .= ', ' . $TitleDesc;
         }
@@ -880,20 +908,21 @@ sub Run {
         if ( $HeaderColumn !~ m{\A DynamicField_}xms ) {
 
             $CSS = '';
-            my $Title = $HeaderColumn;
+            my $Title = $LayoutObject->{LanguageObject}->Translate($HeaderColumn);
 
             if ( $Self->{SortBy} && ( $Self->{SortBy} eq $HeaderColumn ) ) {
                 if ( $Self->{OrderBy} && ( $Self->{OrderBy} eq 'Up' ) ) {
                     $OrderBy = 'Down';
-                    $CSS .= ' SortDescendingLarge';
+                    $CSS .= ' SortAscendingLarge';
                 }
                 else {
                     $OrderBy = 'Up';
-                    $CSS .= ' SortAscendingLarge';
+                    $CSS .= ' SortDescendingLarge';
                 }
 
                 # add title description
-                my $TitleDesc = $OrderBy eq 'Down' ? 'sorted descending' : 'sorted ascending';
+                my $TitleDesc
+                    = $OrderBy eq 'Down' ? Translatable('sorted ascending') : Translatable('sorted descending');
                 $TitleDesc = $LayoutObject->{LanguageObject}->Translate($TitleDesc);
                 $Title .= ', ' . $TitleDesc;
             }
@@ -943,12 +972,12 @@ sub Run {
                 next HEADERCOLUMN;
             }
 
-            my $FilterTitle     = $HeaderColumn;
-            my $FilterTitleDesc = 'filter not active';
+            my $FilterTitle     = $TranslatedWord;
+            my $FilterTitleDesc = Translatable('filter not active');
             if ( $Self->{GetColumnFilterSelect} && $Self->{GetColumnFilterSelect}->{$HeaderColumn} )
             {
                 $CSS .= ' FilterActive';
-                $FilterTitleDesc = 'filter active';
+                $FilterTitleDesc = Translatable('filter active');
             }
             $FilterTitleDesc = $LayoutObject->{LanguageObject}->Translate($FilterTitleDesc);
             $FilterTitle .= ', ' . $FilterTitleDesc;
@@ -979,7 +1008,7 @@ sub Run {
                     $Css = 'Hidden';
                 }
 
-                # variable to save the filter's html code
+                # variable to save the filter's HTML code
                 my $ColumnFilterHTML = $Self->_InitialColumnFilter(
                     ColumnName => $HeaderColumn,
                     Css        => $Css,
@@ -1033,7 +1062,7 @@ sub Run {
                     $Css = 'Hidden';
                 }
 
-                # variable to save the filter's html code
+                # variable to save the filter's HTML code
                 my $ColumnFilterHTML = $Self->_InitialColumnFilter(
                     ColumnName => $HeaderColumn,
                     Css        => $Css,
@@ -1119,14 +1148,14 @@ sub Run {
 
             my $CSS             = '';
             my $FilterTitle     = $Label;
-            my $FilterTitleDesc = 'filter not active';
+            my $FilterTitleDesc = Translatable('filter not active');
             if (
                 $Self->{GetColumnFilterSelect}
                 && defined $Self->{GetColumnFilterSelect}->{$DynamicFieldName}
                 )
             {
                 $CSS .= 'FilterActive ';
-                $FilterTitleDesc = 'filter active';
+                $FilterTitleDesc = Translatable('filter active');
             }
             $FilterTitleDesc = $LayoutObject->{LanguageObject}->Translate($FilterTitleDesc);
             $FilterTitle .= ', ' . $FilterTitleDesc;
@@ -1158,15 +1187,16 @@ sub Run {
                 {
                     if ( $Self->{OrderBy} && ( $Self->{OrderBy} eq 'Up' ) ) {
                         $OrderBy = 'Down';
-                        $CSS .= ' SortDescendingLarge';
+                        $CSS .= ' SortAscendingLarge';
                     }
                     else {
                         $OrderBy = 'Up';
-                        $CSS .= ' SortAscendingLarge';
+                        $CSS .= ' SortDescendingLarge';
                     }
 
                     # add title description
-                    my $TitleDesc = $OrderBy eq 'Down' ? 'sorted descending' : 'sorted ascending';
+                    my $TitleDesc
+                        = $OrderBy eq 'Down' ? Translatable('sorted ascending') : Translatable('sorted descending');
                     $TitleDesc = $LayoutObject->{LanguageObject}->Translate($TitleDesc);
                     $Title .= ', ' . $TitleDesc;
                 }
@@ -1246,7 +1276,7 @@ sub Run {
                     Label      => $Label,
                 );
 
-                # output filtrable (not sortable) dynamic field
+                # output filterable (not sortable) dynamic field
                 $LayoutObject->Block(
                     Name => 'ContentLargeTicketGenericHeaderColumnFilter',
                     Data => {
@@ -1533,6 +1563,15 @@ sub Run {
                         );
                     }
                     $DataValue = $CustomerName;
+                }
+                elsif ( $Column eq 'CustomerCompanyName' ) {
+                    my %CustomerCompanyData;
+                    if ( $Ticket{CustomerID} ) {
+                        %CustomerCompanyData = $Kernel::OM->Get('Kernel::System::CustomerCompany')->CustomerCompanyGet(
+                            CustomerID => $Ticket{CustomerID},
+                        );
+                    }
+                    $DataValue = $CustomerCompanyData{CustomerCompanyName};
                 }
                 else {
                     $DataValue = $Ticket{$Column};
@@ -2012,6 +2051,20 @@ sub _SearchParamsGet {
         if ( $PreferencesColumn->{Order} && @{ $PreferencesColumn->{Order} } ) {
             @Columns = @{ $PreferencesColumn->{Order} };
         }
+
+        # remove duplicate columns
+        my %UniqueColumns;
+        my @ColumnsEnabledAux;
+
+        for my $Column (@Columns) {
+            if ( !$UniqueColumns{$Column} ) {
+                push @ColumnsEnabledAux, $Column;
+            }
+            $UniqueColumns{$Column} = 1;
+        }
+
+        # set filtered column list
+        @Columns = @ColumnsEnabledAux;
     }
 
     # always set TicketNumber
@@ -2112,10 +2165,15 @@ sub _SearchParamsGet {
         # push ARRAYREF attributes directly in an ARRAYREF
         if (
             $Key
-            =~ /^(StateType|StateTypeIDs|Queues|QueueIDs|Types|TypeIDs|States|StateIDs|Priorities|PriorityIDs|Services|ServiceIDs|SLAs|SLAIDs|Locks|LockIDs|OwnerIDs|ResponsibleIDs|WatchUserIDs|ArchiveFlags)$/
+            =~ /^(StateType|StateTypeIDs|Queues|QueueIDs|Types|TypeIDs|States|StateIDs|Priorities|PriorityIDs|Services|ServiceIDs|SLAs|SLAIDs|Locks|LockIDs|OwnerIDs|ResponsibleIDs|WatchUserIDs|ArchiveFlags|CreatedUserIDs|CreatedTypes|CreatedTypeIDs|CreatedPriorities|CreatedPriorityIDs|CreatedStates|CreatedStateIDs|CreatedQueues|CreatedQueueIDs)$/
             )
         {
-            push @{ $TicketSearch{$Key} }, $Value;
+            if ( $Value =~ m{,}smx ) {
+                push @{ $TicketSearch{$Key} }, split( /,/, $Value );
+            }
+            else {
+                push @{ $TicketSearch{$Key} }, $Value;
+            }
         }
 
         # check if parameter is a dynamic field and capture dynamic field name (with DynamicField_)
@@ -2189,6 +2247,9 @@ sub _SearchParamsGet {
         Type   => 'ro',
     );
     my @ViewableQueueIDs = sort keys %ViewableQueues;
+    if ( !@ViewableQueueIDs ) {
+        @ViewableQueueIDs = (999_999);
+    }
 
     # get the custom services from agent preferences
     # set the service ids to an array of non existing service ids (0)
@@ -2208,16 +2269,16 @@ sub _SearchParamsGet {
             OwnerIDs => [ $Self->{UserID}, ],
         },
         Locked => {
-            OwnerIDs => [ $Self->{UserID}, ],
-            LockIDs  => [ '2', '3' ],           # 'lock' and 'tmp_lock'
+            OwnerIDs => $TicketSearch{OwnerIDs} // [ $Self->{UserID}, ],
+            LockIDs => [ '2', '3' ],    # 'lock' and 'tmp_lock'
         },
         Watcher => {
             WatchUserIDs => [ $Self->{UserID}, ],
             LockIDs      => $TicketSearch{LockIDs} // undef,
         },
         Responsible => {
-            ResponsibleIDs => [ $Self->{UserID}, ],
-            LockIDs        => $TicketSearch{LockIDs} // undef,
+            ResponsibleIDs => $TicketSearch{ResponsibleIDs} // [ $Self->{UserID}, ],
+            LockIDs        => $TicketSearch{LockIDs}        // undef,
         },
         MyQueues => {
             QueueIDs => \@MyQueues,
@@ -2229,13 +2290,26 @@ sub _SearchParamsGet {
             LockIDs    => $TicketSearch{LockIDs} // undef,
         },
         All => {
-            OwnerIDs => undef,
-            LockIDs  => $TicketSearch{LockIDs} // undef,
+            OwnerIDs => $TicketSearch{OwnerIDs} // undef,
+            LockIDs  => $TicketSearch{LockIDs}  // undef,
         },
     );
 
+    if ( defined $TicketSearch{LockIDs} || defined $TicketSearch{Locks} ) {
+        delete $TicketSearchSummary{Locked};
+    }
+
+    if ( defined $TicketSearch{WatchUserIDs} ) {
+        delete $TicketSearchSummary{Watcher};
+    }
+
+    if ( defined $TicketSearch{ResponsibleIDs} ) {
+        delete $TicketSearchSummary{Responsible};
+    }
+
     if ( defined $TicketSearch{QueueIDs} || defined $TicketSearch{Queues} ) {
         delete $TicketSearchSummary{MyQueues};
+        delete $TicketSearchSummary{MyServices}->{QueueIDs};
     }
 
     if ( !$Self->{UseTicketService} ) {
