@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <otrs_package version="1.0">
-    <!-- GENERATED WITH OTRS::OPM::Maker::Command::sopm (1.3) -->
+    <!-- GENERATED WITH OTRS::OPM::Maker::Command::sopm (1.36) -->
     <Name>SetDynamicFieldDashboard</Name>
-    <Version>4.0.3</Version>
-    <Framework>4.0.x</Framework>
+    <Version>5.0.1</Version>
+    <Framework>5.0.x</Framework>
     <Vendor>Perl-Services.de</Vendor>
     <URL>http://www.perl-services.de</URL>
     <Description Lang="de">Ermöglicht das Setzen eines Dynamischen Feldes im Dashboard</Description>
@@ -11,8 +11,8 @@
     <License>GNU AFFERO GENERAL PUBLIC LICENSE Version 3, November 2007</License>
     <Filelist>
         <File Permission="644" Location="Custom/Kernel/Modules/AgentDynamicFieldDashboardSet.pm" />
-        <File Permission="644" Location="Custom/Kernel/Output/HTML/DashboardTicketGenericDynamicField.pm" />
-        <File Permission="644" Location="Custom/Kernel/Output/HTML/Standard/AgentDashboardTicketGenericDynamicField.tt" />
+        <File Permission="644" Location="Custom/Kernel/Output/HTML/Dashboard/TicketGenericDynamicField.pm" />
+        <File Permission="644" Location="Custom/Kernel/Output/HTML/Templates/Standard/AgentDashboardTicketGenericDynamicField.tt" />
         <File Permission="644" Location="Kernel/Config/Files/SetDynamicFieldDashboard.xml" />
         <File Permission="644" Location="Kernel/Language/de_SetDynamicFieldDashboard.pm" />
         <File Permission="644" Location="doc/SetDynamicFieldDashboard.json" />
