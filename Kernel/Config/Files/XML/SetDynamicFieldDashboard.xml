@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<otrs_config version="2.0" init="Application">
+    <Setting Name="SetDynamicFieldDashboard::DynamicField" Required="0" Valid="1">
+        <Description Translatable="1">Defines which dynamic field can be set in dashboard.</Description>
+        <Navigation>Core</Navigation>
+        <Value>
+            <Item ValueType="String" ValueRegex="">Project</Item>
+        </Value>
+    </Setting>
+    <Setting Name="SetDynamicFieldDashboard::CSS" Required="0" Valid="0">
+        <Description Translatable="1">CSS added in the style attribute</Description>
+        <Navigation>Core</Navigation>
+        <Value>
+            <Item ValueType="String" ValueRegex="">width: 180px</Item>
+        </Value>
+    </Setting>
+    <Setting Name="Frontend::Module###AgentDynamicFieldDashboardSet" Required="0" Valid="1">
+        <Description Lang="en">Frontend module registration to save dynmaic field changes.</Description>
+        <Description Lang="de">Frontendmodul-Registration für das Modul zum Speichern der Aenderungen an Dynamischen Feldern.</Description>
+        <Navigation>Frontend::Agent::ModuleRegistration</Navigation>
+        <Value>
+            <Item ValueType="FrontendRegistration">
+                <Hash>
+                    <Item Key="Group">
+                        <Array>
+                        </Array>
+                    </Item>
+                    <Item Key="GroupRo">
+                        <Array>
+                        </Array>
+                    </Item>
+                    <Item Key="Description"></Item>
+                    <Item Key="NavBarName">Ticket</Item>
+                    <Item Key="Title"></Item>
+                </Hash>
+            </Item>
+        </Value>
+    </Setting>
+    <Setting Name="Frontend::Navigation###AgentDynamicFieldDashboardSet###002-SetDynamicFieldDashboard" Required="0" Valid="0">
+        <Description Translatable="1">Main menu item registration.</Description>
+        <Navigation>Frontend::Agent::ModuleRegistration::MainMenu</Navigation>
+        <Value>
+            <Array>
+                <DefaultItem ValueType="FrontendNavigation">
+                    <Hash>
+                    </Hash>
+                </DefaultItem>
+            </Array>
+        </Value>
+    </Setting>
+
+</otrs_config>
